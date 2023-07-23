@@ -1,9 +1,8 @@
-import React, { Key, useState } from "react";
+import * as React from "react";
+import { useState } from "react";
 
 interface JsonData {
-  [key: string]: {
-    [key: string]: never;
-  };
+  [key: string]: string | number | boolean | JsonData;
 }
 
 interface SavedJsonListProps {
@@ -11,33 +10,67 @@ interface SavedJsonListProps {
   setSavedJsons: React.Dispatch<React.SetStateAction<JsonData[]>>;
 }
 
+interface RegularJsonDisplayProps {
+  jsonData: JsonData;
+}
+
+const RegularJsonDisplay: React.FC<RegularJsonDisplayProps> = ({ jsonData }) => {
+  return (
+    <pre style={{ padding: "1rem" }}>
+      {JSON.stringify(jsonData, null, 2)}
+    </pre>
+  );
+};
+
 const SavedJsonList: React.FC<SavedJsonListProps> = ({ savedJsons, setSavedJsons }) => {
-  const [editingJsonIndex, setEditingJsonIndex] = useState<number | null>(null);
-  const [editedJson, setEditedJson] = useState<JsonData>({});
+  const [editingJson, setEditingJson] = useState<JsonData | null>(null);
 
   const handleEdit = (index: number) => {
-    setEditedJson(savedJsons[index]);
-    setEditingJsonIndex(index);
+    setEditingJson({ ...savedJsons[index] });
   };
 
   const handleCancelEdit = () => {
-    setEditedJson({});
-    setEditingJsonIndex(null);
+    setEditingJson(null);
   };
 
-  const handleSaveEdit = () => {
-    const updatedSavedJsons = [...savedJsons];
-    updatedSavedJsons[editingJsonIndex as number] = editedJson;
-    setSavedJsons(updatedSavedJsons);
-    setEditedJson({});
-    setEditingJsonIndex(null);
+  const handleUpdate = () => {
+    if (editingJson) {
+      const updatedSavedJsons = savedJsons.map((json) =>
+        json.id === editingJson.id ? { ...editingJson } : json
+      );
+      setSavedJsons(updatedSavedJsons);
+      setEditingJson(null);
+      localStorage.setItem("savedJsons", JSON.stringify(updatedSavedJsons));
+    }
   };
 
-  const handleDelete = (index: number) => {
-    const updatedSavedJsons = [...savedJsons];
-    updatedSavedJsons.splice(index, 1);
-    setSavedJsons(updatedSavedJsons);
-    setEditingJsonIndex(null);
+  const handleInputChange = (key: string, value: any, parentKey?: string) => {
+    if (editingJson) {
+      if (parentKey) {
+        setEditingJson((prevEditedJson) => ({
+          ...prevEditedJson,
+          [parentKey]: {
+            ...prevEditedJson[parentKey],
+            [key]: value,
+          },
+        }));
+      } else {
+        setEditingJson((prevEditedJson) => ({
+          ...prevEditedJson,
+          [key]: value,
+        }));
+      }
+    }
+  };
+
+  const getValueForKey = (json: any, key: string) => {
+    const keys = key.split('.');
+    let value = json;
+    for (const k of keys) {
+      value = value[k];
+      if (value === undefined) break;
+    }
+    return value;
   };
 
   const handleDownload = (json: JsonData) => {
@@ -53,36 +86,86 @@ const SavedJsonList: React.FC<SavedJsonListProps> = ({ savedJsons, setSavedJsons
     URL.revokeObjectURL(url);
   };
 
+  const handleDelete = (index: number) => {
+    const updatedSavedJsons = [...savedJsons];
+    updatedSavedJsons.splice(index, 1);
+    setSavedJsons(updatedSavedJsons);
+    setEditingJson(null);
+  };
+
+  const renderInputs = (data: any, parentKey = "") => {
+    return Object.entries(data).map(([key, value]) => {
+      const inputKey = parentKey ? `${parentKey}.${key}` : key;
+      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+        return (
+          <div key={inputKey} style={{ marginBottom: "0.5rem", marginLeft: "1rem" }}>
+            <strong>{key}</strong>:
+            {renderInputs(value, inputKey)}
+          </div>
+        );
+      } else {
+        return (
+          <div key={inputKey} style={{ marginBottom: "0.5rem", marginLeft: "1rem" }}>
+            <strong>{key}</strong>:
+            {editingJson ? (
+              <div>
+                {typeof value === "boolean" ? (
+                  <input
+                    type="checkbox"
+                    checked={getValueForKey(editingJson, inputKey) === true}
+                    onChange={(e) => handleInputChange(key, e.target.checked, parentKey)}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={getValueForKey(editingJson, inputKey)}
+                    onChange={(e) => handleInputChange(key, e.target.value, parentKey)}
+                  />
+                )}
+              </div>
+            ) : (
+              <span style={{ marginLeft: "0.5rem" }}>
+                {typeof value === "object" ? JSON.stringify(value) : value.toString()}
+              </span>
+            )}
+          </div>
+        );
+      }
+    });
+  };
+
   return (
     <div style={{ marginTop: "2rem" }}>
-      {savedJsons.map((json: JsonData, index: Key | null | undefined) => (
+      {savedJsons.map((json, index) => (
         <div key={index} style={{ marginBottom: "1rem", border: "1px solid #ddd", padding: "1rem" }}>
-          {editingJsonIndex === index ? (
+          {editingJson && editingJson.id === json.id ? (
             <div>
-              <textarea
-                value={JSON.stringify(editedJson, null, 2)}
-                onChange={(e) => setEditedJson(JSON.parse(e.target.value))}
-                style={{ width: "100%", height: "200px", marginBottom: "1rem" }}
-              />
-              <button onClick={handleSaveEdit} style={{ marginRight: "1rem" }}>
-                Save
+              {renderInputs(editingJson, "")}
+              <button onClick={handleUpdate} style={{ marginRight: "1rem" }}>
+                Update
               </button>
               <button onClick={handleCancelEdit}>Cancel</button>
             </div>
           ) : (
             <div>
-              <pre>{JSON.stringify(json, null, 2)}</pre>
+              {renderInputs(json, "")}
               <button onClick={() => handleEdit(index)} style={{ marginRight: "1rem" }}>
                 Edit
               </button>
+              <button onClick={() => handleDownload(json)}>Download</button>
               <button onClick={() => handleDelete(index)}>Delete</button>
-              <button onClick={() => handleDownload(json)} style={{ marginLeft: "1rem" }}>
-                Download
-              </button>
+              <RegularJsonDisplay jsonData={json} />
             </div>
           )}
         </div>
       ))}
+
+      {editingJson ? (
+        <div style={{ marginTop: "2rem", border: "1px solid #ddd", padding: "1rem" }}>
+          <h3>Regular JSON Display:</h3>
+          <RegularJsonDisplay jsonData={editingJson} />
+        </div>
+      ) : null}
     </div>
   );
 };
