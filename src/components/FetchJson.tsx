@@ -1,11 +1,9 @@
 import * as React from "react";
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SavedJsonList from "./SavedJsonList";
 
 interface JsonData {
-  [key: string]: {
-    [key: string]: never;
-  };
+  [key: string]: string | number | boolean | JsonData;
 }
 
 const App: React.FC = () => {
@@ -48,7 +46,11 @@ const App: React.FC = () => {
     setSavedJsons(updatedSavedJsons);
     setJsonData({});
     // Trigger download
-    const jsonDataString = JSON.stringify(jsonData, null, 2);
+    handleDownload(jsonData);
+  };
+
+  const handleDownload = (json: JsonData) => {
+    const jsonDataString = JSON.stringify(json, null, 2);
     const blob = new Blob([jsonDataString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
