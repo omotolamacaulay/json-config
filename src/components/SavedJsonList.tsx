@@ -14,15 +14,16 @@ interface RegularJsonDisplayProps {
   jsonData: JsonData;
 }
 
-const RegularJsonDisplay: React.FC<RegularJsonDisplayProps> = ({ jsonData }) => {
-  return (
-    <pre style={{ padding: "1rem", border: "1px solid #ddd", background: "#f9f9f9" }}>
-      {JSON.stringify(jsonData, null, 2)}
-    </pre>
-  );
+const RegularJsonDisplay: React.FC<RegularJsonDisplayProps> = ({
+  jsonData,
+}) => {
+  return <pre className="jsonFormat">{JSON.stringify(jsonData, null, 2)}</pre>;
 };
 
-const SavedJsonList: React.FC<SavedJsonListProps> = ({ savedJsons, setSavedJsons }) => {
+const SavedJsonList: React.FC<SavedJsonListProps> = ({
+  savedJsons,
+  setSavedJsons,
+}) => {
   const [editingJson, setEditingJson] = useState<JsonData | null>(null);
   const [jsonTextArea, setJsonTextArea] = useState("");
   const [error, setError] = useState("");
@@ -30,11 +31,14 @@ const SavedJsonList: React.FC<SavedJsonListProps> = ({ savedJsons, setSavedJsons
   const handleJsonLoad = () => {
     try {
       const parsedJson = JSON.parse(jsonTextArea);
-      setSavedJsons([...savedJsons, parsedJson]); // Update the savedJsons state with the loaded JSON
+      setSavedJsons([...savedJsons, parsedJson]);
       setEditingJson(parsedJson);
       setError("");
-      setJsonTextArea(""); // Clear the JSON textarea after loading
-      localStorage.setItem("savedJsons", JSON.stringify([...savedJsons, parsedJson])); // Save the updated savedJsons to local storage
+      setJsonTextArea("");
+      localStorage.setItem(
+        "savedJsons",
+        JSON.stringify([...savedJsons, parsedJson])
+      );
     } catch (error) {
       setError("Invalid JSON. Please check your input.");
     }
@@ -56,13 +60,15 @@ const SavedJsonList: React.FC<SavedJsonListProps> = ({ savedJsons, setSavedJsons
       setSavedJsons(updatedSavedJsons);
       setEditingJson(null);
       localStorage.setItem("savedJsons", JSON.stringify(updatedSavedJsons));
-
-      // Immediately download the JSON
       handleDownload(editingJson);
     }
   };
 
-  const handleInputChange = (key: string, value: string | number | boolean, parentKey?: string) => {
+  const handleInputChange = (
+    key: string,
+    value: string | number | boolean,
+    parentKey?: string
+  ) => {
     if (editingJson) {
       const updatedJson = { ...editingJson };
 
@@ -124,16 +130,20 @@ const SavedJsonList: React.FC<SavedJsonListProps> = ({ savedJsons, setSavedJsons
   const renderInputs = (jsonData: JsonData, parentKey = "") => {
     return Object.entries(jsonData).map(([key, value]) => {
       const inputKey = parentKey ? `${parentKey}.${key}` : key;
-      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         return (
-          <div key={inputKey} style={{ marginBottom: "0.5rem", marginLeft: "1rem" }}>
-            <strong>{key}</strong>:
+          <div key={inputKey} className="modelGroup">
+            <h4 className="modelKey">{key}</h4>
             {renderInputs(value, inputKey)}
           </div>
         );
       } else {
         return (
-          <div key={inputKey} style={{ marginBottom: "0.5rem", marginLeft: "1rem" }}>
+          <div key={inputKey} className="modelGroup">
             <strong>{key}</strong>:
             {editingJson ? (
               <div>
@@ -142,9 +152,11 @@ const SavedJsonList: React.FC<SavedJsonListProps> = ({ savedJsons, setSavedJsons
                     <input
                       type="checkbox"
                       checked={getValueForKey(editingJson, inputKey) === true}
-                      onChange={(e) => handleInputChange(key, e.target.checked, parentKey)}
+                      onChange={(e) =>
+                        handleInputChange(key, e.target.checked, parentKey)
+                      }
                     />
-                    <span style={{ marginLeft: "0.5rem" }}>
+                    <span>
                       {getValueForKey(editingJson, inputKey) ? "true" : "false"}
                     </span>
                   </div>
@@ -152,13 +164,17 @@ const SavedJsonList: React.FC<SavedJsonListProps> = ({ savedJsons, setSavedJsons
                   <input
                     type="text"
                     value={getValueForKey(editingJson, inputKey)}
-                    onChange={(e) => handleInputChange(key, e.target.value, parentKey)}
+                    onChange={(e) =>
+                      handleInputChange(key, e.target.value, parentKey)
+                    }
                   />
                 )}
               </div>
             ) : (
-              <span style={{ marginLeft: "0.5rem" }}>
-                {typeof value === "object" ? JSON.stringify(value) : value.toString()}
+              <span>
+                {typeof value === "object"
+                  ? JSON.stringify(value)
+                  : value.toString()}
               </span>
             )}
           </div>
@@ -168,50 +184,55 @@ const SavedJsonList: React.FC<SavedJsonListProps> = ({ savedJsons, setSavedJsons
   };
 
   return (
-    <div style={{ marginTop: "2rem" }}>
+    <div className="jsonListbody">
       <textarea
         value={jsonTextArea}
         onChange={(e) => setJsonTextArea(e.target.value)}
-        style={{ width: "100%", minHeight: "100px", marginBottom: "1rem" }}
         placeholder="Paste your JSON here..."
       />
-      <button onClick={handleJsonLoad} style={{ marginRight: "1rem" }}>
-        Load JSON
-      </button>
+      <button onClick={handleJsonLoad}>Load JSON</button>
       <span style={{ color: "red" }}>{error}</span>
       {editingJson && (
-        <div style={{ marginBottom: "1rem", border: "1px solid #ddd", padding: "1rem" }}>
-          <h3>Edit JSON:</h3>
-          {renderInputs(editingJson, "")}
-          <button onClick={handleUpdate} style={{ marginRight: "1rem" }}>
-            Update and Download
-          </button>
-          <button onClick={handleCancelEdit}>Cancel</button>
+        <div className="displaySavedBody">
+          <div className="displaySaved">
+            <div className="renderInuts">
+              <h3>Edit JSON</h3>
+              {renderInputs(editingJson, "")}
+            </div>
+            {editingJson ? (
+              <div className="jsonDisplay">
+                <h3>Regular JSON Display</h3>
+                <RegularJsonDisplay jsonData={editingJson} />
+              </div>
+            ) : null}
+          </div>
+          <div className="buttonGroup">
+            <button onClick={handleUpdate}>Update and Download</button>
+            <button onClick={handleCancelEdit}>Cancel</button>
+          </div>
         </div>
       )}
 
       {savedJsons.map((json, index) => (
-        <div key={index} style={{ marginBottom: "1rem", border: "1px solid #ddd", padding: "1rem" }}>
+        <div key={index} className="displaySavedBody">
           {!editingJson && (
             <div>
               <h3>Regular JSON Display:</h3>
-              <RegularJsonDisplay jsonData={json} />
-              <button onClick={() => handleEdit(index)} style={{ marginRight: "1rem" }}>
-                Edit
-              </button>
-              <button onClick={() => handleDownload(json)}>Download</button>
-              <button onClick={() => handleDelete(index)}>Delete</button>
-              {renderInputs(json, "")}
+              <div className="displaySaved">
+                <div className="jsonDisplay">
+                  <RegularJsonDisplay jsonData={json} />
+                </div>
+                <div className="jsonDisplay">{renderInputs(json, "")}</div>
+              </div>
+              <div>
+                <button onClick={() => handleEdit(index)}>Edit</button>
+                <button onClick={() => handleDownload(json)}>Download</button>
+                <button onClick={() => handleDelete(index)}>Delete</button>
+              </div>
             </div>
           )}
         </div>
       ))}
-      {editingJson ? (
-        <div style={{ marginTop: "2rem", border: "1px solid #ddd", padding: "1rem" }}>
-          <h3>Regular JSON Display:</h3>
-          <RegularJsonDisplay jsonData={editingJson} />
-        </div>
-      ) : null}
     </div>
   );
 };
