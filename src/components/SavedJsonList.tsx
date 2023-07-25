@@ -31,14 +31,14 @@ const SavedJsonList: React.FC<SavedJsonListProps> = ({
   const handleJsonLoad = () => {
     try {
       const parsedJson = JSON.parse(jsonTextArea);
-      setSavedJsons([...savedJsons, parsedJson]);
+      //   setSavedJsons([...savedJsons, parsedJson]);
       setEditingJson(parsedJson);
       setError("");
       setJsonTextArea("");
-      localStorage.setItem(
-        "savedJsons",
-        JSON.stringify([...savedJsons, parsedJson])
-      );
+      //   localStorage.setItem(
+      //     "savedJsons",
+      //     JSON.stringify([...savedJsons, parsedJson])
+      //   );
     } catch (error) {
       setError("Invalid JSON. Please check your input.");
     }
@@ -59,7 +59,7 @@ const SavedJsonList: React.FC<SavedJsonListProps> = ({
       );
       setSavedJsons(updatedSavedJsons);
       setEditingJson(null);
-      localStorage.setItem("savedJsons", JSON.stringify(updatedSavedJsons));
+      //   localStorage.setItem("savedJsons", JSON.stringify(updatedSavedJsons));
       handleDownload(editingJson);
     }
   };
