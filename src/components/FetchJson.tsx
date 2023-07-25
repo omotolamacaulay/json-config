@@ -31,7 +31,9 @@ const App: React.FC = () => {
     localStorage.setItem("savedJsons", JSON.stringify(savedJsons));
   }, [savedJsons]);
 
-  const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTextareaChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     try {
       const parsedData = JSON.parse(event.target.value);
       setJsonData(parsedData);
@@ -63,18 +65,16 @@ const App: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
+    <div>
+      <h1>JSON Config</h1>
       <div>
-        <textarea
-          value={jsonString}
-          onChange={handleTextareaChange}
-          style={{ width: "100%", height: "300px", marginBottom: "1rem" }}
-        />
-        <button onClick={handleSave} style={{ marginRight: "1rem" }}>
-          Save JSON & Download
-        </button>
+        <h3>Edit your JSON directly and download</h3>
+        <textarea value={jsonString} onChange={handleTextareaChange} />
+        <button onClick={handleSave}>Edit JSON directly & Download</button>
         <button onClick={() => setJsonData({})}>Clear</button>
       </div>
+      <h4>Or</h4>
+      <h3>Load Input fields for a cooler experience</h3>
       <SavedJsonList savedJsons={savedJsons} setSavedJsons={setSavedJsons} />
     </div>
   );
