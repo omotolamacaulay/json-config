@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import SavedJsonList from "./SavedJsonList";
 
 interface JsonData {
@@ -14,22 +14,24 @@ const App: React.FC = () => {
     return storedSavedJsons ? JSON.parse(storedSavedJsons) : [];
   });
 
-  useEffect(() => {
-    const storedData = localStorage.getItem("jsonData");
-    if (storedData) {
-      setJsonData(JSON.parse(storedData));
-      setJsonString(JSON.stringify(JSON.parse(storedData), null, 2));
-    }
-  }, []);
+  //   Code below is to sace json in local storage
 
-  useEffect(() => {
-    localStorage.setItem("jsonData", JSON.stringify(jsonData));
-    setJsonString(JSON.stringify(jsonData, null, 2));
-  }, [jsonData]);
+  //   useEffect(() => {
+  //     const storedData = localStorage.getItem("jsonData");
+  //     if (storedData) {
+  //       setJsonData(JSON.parse(storedData));
+  //       setJsonString(JSON.stringify(JSON.parse(storedData), null, 2));
+  //     }
+  //   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("savedJsons", JSON.stringify(savedJsons));
-  }, [savedJsons]);
+  //   useEffect(() => {
+  //     localStorage.setItem("jsonData", JSON.stringify(jsonData));
+  //     setJsonString(JSON.stringify(jsonData, null, 2));
+  //   }, [jsonData]);
+
+  //   useEffect(() => {
+  //     localStorage.setItem("savedJsons", JSON.stringify(savedJsons));
+  //   }, [savedJsons]);
 
   const handleTextareaChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>
@@ -68,14 +70,14 @@ const App: React.FC = () => {
     <div>
       <h1>JSON Config</h1>
       <div>
-        <h3>Edit your JSON directly and download</h3>
+        <h3>Load and Edit JSON With Input Fields For a Cool Experience</h3>
+        <SavedJsonList savedJsons={savedJsons} setSavedJsons={setSavedJsons} />
+        <h4>Or</h4>
+        <h3>Edit your JSON Directly and Download</h3>
         <textarea value={jsonString} onChange={handleTextareaChange} />
         <button onClick={handleSave}>Edit JSON directly & Download</button>
         <button onClick={() => setJsonData({})}>Clear</button>
       </div>
-      <h4>Or</h4>
-      <h3>Load Input fields for a cooler experience</h3>
-      <SavedJsonList savedJsons={savedJsons} setSavedJsons={setSavedJsons} />
     </div>
   );
 };
